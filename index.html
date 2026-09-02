@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carnet de bord — versements et bénéfice</title>
+<meta name="theme-color" content="#16262b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Carnet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--encre:#16262b;--papier:#e7ecea;--carte:#fff;--vert:#0b6b4f;--brique:#a33a28;--gris:#5e6e6c;--trait:#c9d3d0}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--papier);color:var(--encre);font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%;padding:0 0 calc(3rem + env(safe-area-inset-bottom))}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .wrap{max-width:34rem;margin:0 auto;padding:0 1rem}
+  .bilan{background:var(--encre);color:#f3f6f5;padding:calc(1rem + env(safe-area-inset-top)) 0 1.3rem;border-bottom:3px solid var(--vert)}
+  .onglets{display:flex;gap:.4rem;margin-bottom:1.1rem}
+  .onglets button{flex:1;padding:.5rem .4rem;border:1px solid #33474d;background:transparent;color:#9fb3ae;border-radius:.4rem;font-size:.92rem;font-weight:500}
+  .onglets button[aria-pressed="true"]{background:#f3f6f5;color:var(--encre);border-color:#f3f6f5;font-weight:600}
+  .benef{display:flex;align-items:baseline;gap:.4rem}
+  .benef .val{font-size:2.7rem;font-weight:700;line-height:1}
+  .benef .dev{font-size:1rem;font-weight:500;color:#9fb3ae}
+  .benef-lib{margin:.35rem 0 1rem;font-size:.9rem;color:#9fb3ae}
+  .jauge{height:.5rem;border-radius:.25rem;background:#2c4048;overflow:hidden;display:flex}
+  .jauge span{display:block;height:100%}
+  .jauge .part-dep{background:var(--brique)}
+  .jauge .part-ben{background:#2fa07c}
+  .legende{display:flex;justify-content:space-between;margin-top:.55rem;font-size:.85rem;color:#b8c7c3}
+  .legende b{font-weight:600;color:#f3f6f5}
+  .cumul{margin-top:.9rem;padding-top:.7rem;border-top:1px solid #2c4048;font-size:.88rem;color:#b8c7c3}
+  .cumul b{color:#f3f6f5;font-weight:600}
+  section{margin-top:1.4rem}
+  h2{font-size:1.05rem;font-weight:600;margin:0 0 .7rem}
+  .carte{background:var(--carte);border:1px solid var(--trait);border-radius:.6rem;padding:1rem}
+  .cadence .compte{display:flex;align-items:baseline;gap:.45rem}
+  .cadence .compte .g{font-size:2rem;font-weight:700;line-height:1}
+  .cadence .compte .p{font-size:.95rem;color:var(--gris)}
+  .semaines{display:flex;gap:.18rem;margin:.8rem 0 .6rem;flex-wrap:wrap}
+  .semaines i{width:.62rem;height:1.5rem;border-radius:.14rem;background:var(--vert);display:block}
+  .semaines i.vide{background:#dbe3e0;border:1px solid var(--trait)}
+  .cadence p{margin:.35rem 0 0;font-size:.9rem;color:var(--gris)}
+  .cadence b{color:var(--encre);font-weight:600}
+  .manquees{margin-top:.5rem;font-size:.88rem;color:var(--brique)}
+  label{display:block;font-size:.85rem;color:var(--gris);margin-bottom:.25rem}
+  input,textarea{width:100%;font:inherit;font-variant-numeric:tabular-nums;padding:.6rem .7rem;border:1px solid var(--trait);border-radius:.4rem;background:#fbfcfc;color:var(--encre)}
+  textarea{font-size:.8rem;height:6rem}
+  input:focus,textarea:focus{outline:2px solid var(--vert);outline-offset:1px;border-color:var(--vert)}
+  .ligne2{display:flex;gap:.6rem}
+  .ligne2>div{flex:1}
+  .dep-ligne{display:flex;gap:.5rem;margin-bottom:.5rem}
+  .dep-ligne input:first-child{flex:1.6}
+  .dep-ligne input:nth-child(2){flex:1}
+  .retirer{flex:0 0 2.2rem;border:1px solid var(--trait);background:#fbfcfc;border-radius:.4rem;color:var(--brique);font-size:1.2rem;line-height:1}
+  .sous-titre{margin:1rem 0 .5rem;font-size:.85rem;color:var(--gris)}
+  button{font:inherit;cursor:pointer}
+  .btn-lien{background:none;border:none;color:var(--vert);font-weight:600;padding:.2rem 0;font-size:.9rem}
+  .btn-principal{width:100%;margin-top:1rem;padding:.85rem;border:none;border-radius:.45rem;background:var(--vert);color:#fff;font-weight:600;font-size:1rem}
+  .btn-principal:active{background:#08543d}
+  .btn-annuler,.btn-second{width:100%;margin-top:.5rem;padding:.6rem;border:1px solid var(--trait);border-radius:.45rem;background:#fbfcfc;color:var(--gris)}
+  .apercu{margin-top:.9rem;font-size:.92rem;color:var(--gris)}
+  .apercu b{color:var(--encre);font-weight:600}
+  details{background:var(--carte);border:1px solid var(--trait);border-radius:.6rem;margin-bottom:.6rem;overflow:hidden}
+  summary{list-style:none;cursor:pointer;padding:.85rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:.6rem;font-weight:600}
+  summary::-webkit-details-marker{display:none}
+  summary .compteur{font-weight:500;color:var(--gris);font-size:.88rem;margin-left:auto;margin-right:.6rem}
+  summary::after{content:"+";color:var(--gris);font-weight:500;font-size:1.15rem;line-height:1}
+  details[open] summary::after{content:"–"}
+  details[open] summary{border-bottom:1px solid var(--trait)}
+  .contenu{padding:.9rem 1rem 1rem}
+  .entree{display:flex;gap:.9rem;border-bottom:1px solid var(--trait);padding:.8rem 0}
+  .entree:last-child{border-bottom:none;padding-bottom:0}
+  .date-bloc{flex:0 0 2.9rem;text-align:center;border-right:1px solid var(--trait);padding-right:.6rem}
+  .date-bloc .j{display:block;font-size:1.3rem;font-weight:700;line-height:1.1}
+  .date-bloc .m{display:block;font-size:.75rem;color:var(--gris)}
+  .corps{flex:1;min-width:0}
+  .rang{display:flex;justify-content:space-between;gap:.6rem;font-size:.95rem;padding:.08rem 0}
+  .rang .lib{color:var(--gris);min-width:0;overflow-wrap:anywhere}
+  .rang.entrant .mt{color:var(--vert);font-weight:600}
+  .rang.sortant .mt{color:var(--brique)}
+  .net{display:flex;justify-content:space-between;margin-top:.45rem;padding-top:.45rem;border-top:1px dashed var(--trait);font-weight:600}
+  .net.negatif{color:var(--brique)}
+  .actions{display:flex;gap:.9rem;margin-top:.45rem}
+  .actions button{background:none;border:none;padding:0;font-size:.85rem;color:var(--gris);text-decoration:underline}
+  .actions .danger{color:var(--brique)}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th,td{text-align:right;padding:.45rem .2rem;font-size:.92rem;border-bottom:1px solid var(--trait)}
+  th{font-weight:500;color:var(--gris);font-size:.82rem}
+  th:first-child,td:first-child{text-align:left}
+  tr:last-child td{border-bottom:none}
+  td.pos{color:var(--vert);font-weight:600}
+  td.neg{color:var(--brique);font-weight:600}
+  .vide{color:var(--gris);font-size:.92rem;margin:0}
+  .note{font-size:.82rem;color:var(--gris);margin-top:.7rem;min-height:1rem}
+</style>
+</head>
+<body>
+<div class="bilan">
+  <div class="wrap">
+    <div class="onglets" id="onglets"></div>
+    <div class="benef"><span class="val num" id="benefVal">—</span><span class="dev">FCFA</span></div>
+    <div class="benef-lib" id="benefLib">bénéfice net</div>
+    <div class="jauge"><span class="part-dep" id="barDep"></span><span class="part-ben" id="barBen"></span></div>
+    <div class="legende">
+      <span>Versements <b class="num" id="totVers">—</b></span>
+      <span>Dépenses <b class="num" id="totDep">—</b></span>
+    </div>
+    <div class="cumul" id="cumul"></div>
+  </div>
+</div>
+<div class="wrap">
+  <section><div class="carte cadence" id="cadence"></div></section>
+  <section>
+    <h2 id="titreForm">Nouveau versement</h2>
+    <div class="carte">
+      <div class="ligne2">
+        <div><label for="fDate">Date</label><input type="date" id="fDate"></div>
+        <div><label for="fVers">Versement reçu</label><input type="text" id="fVers" inputmode="numeric" placeholder="48000"></div>
+      </div>
+      <p class="sous-titre">Dépenses de la semaine</p>
+      <div id="depList"></div>
+      <button class="btn-lien" id="btnAddDep">+ Ajouter une dépense</button>
+      <p class="apercu" id="apercu">Bénéfice de ce versement : <b class="num">0 FCFA</b></p>
+      <button class="btn-principal" id="btnSave">Enregistrer le versement</button>
+      <button class="btn-annuler" id="btnCancel" hidden>Annuler la modification</button>
+      <p class="note" id="note"></p>
+    </div>
+  </section>
+  <section>
+    <details id="detJournal">
+      <summary>Journal des versements <span class="compteur" id="cptJournal"></span></summary>
+      <div class="contenu" id="journal"></div>
+    </details>
+    <details>
+      <summary>Bilan par mois <span class="compteur" id="cptMois"></span></summary>
+      <div class="contenu">
+        <table><thead><tr><th>Mois</th><th>Versé</th><th>Dépensé</th><th>Bénéfice</th></tr></thead>
+        <tbody id="moisBody"></tbody></table>
+      </div>
+    </details>
+    <details>
+      <summary>Postes de dépense <span class="compteur" id="cptPostes"></span></summary>
+      <div class="contenu">
+        <table><thead><tr><th>Poste</th><th>Fois</th><th>Total</th></tr></thead>
+        <tbody id="postesBody"></tbody></table>
+      </div>
+    </details>
+    <details>
+      <summary>Sauvegarde des données</summary>
+      <div class="contenu">
+        <p class="vide">Copie ce texte dans tes notes de temps en temps. Si tu changes de téléphone ou que tu vides Safari, recolle-le ici pour tout retrouver.</p>
+        <button class="btn-second" id="btnCopier">Copier la sauvegarde</button>
+        <p class="sous-titre">Restaurer une sauvegarde</p>
+        <textarea id="zoneRestore" placeholder="Colle ici le texte de sauvegarde"></textarea>
+        <button class="btn-second" id="btnRestore">Remplacer les données par cette sauvegarde</button>
+        <p class="note" id="noteSauv"></p>
+      </div>
+    </details>
+  </section>
+</div>
+<script>
+const CLE="carnet-vehicules-v1";
+const MOIS=["janv.","févr.","mars","avril","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const memoire={};
+const Stock={
+  lire(c){try{const v=localStorage.getItem(c);if(v!==null)return v}catch(e){}return memoire[c]||null},
+  ecrire(c,v){memoire[c]=v;try{localStorage.setItem(c,v);return true}catch(e){}return false}
+};
+const seedMegane=[
+ ["2026-05-25",8000,[["Fuite de liquide de refroidissement",10000]]],
+ ["2026-06-01",27000,[["Pompe à eau",20000],["Mécanicien",10000]]],
+ ["2026-06-15",46800,[["Pneu de secours, cric, clé à roue",30000]]],
+ ["2026-06-24",48000,[["Pneu avant gauche",10000]]],
+ ["2026-07-05",48000,[["Assurance",11750]]],
+ ["2026-07-13",46000,[["Organe",30000],["Mécanicien",12000],["Gasoil",5000]]],
+ ["2026-07-19",32000,[]],
+ ["2026-07-26",25000,[]],
+ ["2026-08-02",48000,[]],
+ ["2026-08-10",40000,[["Pneu",10000]]],
+ ["2026-08-18",30000,[["PM",50000],["Boîte de vitesse",65000],["Huile et paiement",25000],["Batterie",20000]]]
+].map((e,i)=>({id:"m"+i,date:e[0],versement:e[1],depenses:e[2].map(d=>({libelle:d[0],montant:d[1]}))}));
+let data={vehicules:[{id:"megane",nom:"Renault Mégane",entrees:seedMegane},{id:"p5008",nom:"Peugeot 5008",entrees:[]}]};
+let actif="megane",editId=null,confirmId=null;
+const fmt=n=>Math.round(n).toLocaleString("fr-FR");
+const nombre=v=>{const s=String(v).replace(/[^\d]/g,"");return s?parseInt(s,10):0};
+const totalDep=e=>e.depenses.reduce((s,d)=>s+d.montant,0);
+const net=e=>e.versement-totalDep(e);
+const vehicule=()=>data.vehicules.find(v=>v.id===actif);
+const echap=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const jour=s=>new Date(s+"T12:00:00");
+function lundi(d){const x=new Date(d);const j=(x.getDay()+6)%7;x.setDate(x.getDate()-j);x.setHours(12,0,0,0);return x}
+const cle=d=>d.toISOString().slice(0,10);
+const libCourt=d=>d.getDate()+" "+MOIS[d.getMonth()];
+function charger(){const b=Stock.lire(CLE);if(b){try{data=JSON.parse(b)}catch(e){}}else{sauver()}tout()}
+function sauver(){const ok=Stock.ecrire(CLE,JSON.stringify(data));
+  document.getElementById("note").textContent=ok?"":"Les données ne sont pas sauvegardées sur cet appareil."}
+function ligneDep(libelle="",montant=""){
+  const d=document.createElement("div");d.className="dep-ligne";
+  const a=document.createElement("input");a.type="text";a.placeholder="Pneu, mécanicien, gasoil…";a.value=libelle;
+  const b=document.createElement("input");b.type="text";b.inputMode="numeric";b.placeholder="10000";b.value=montant;
+  b.addEventListener("input",apercu);
+  const x=document.createElement("button");x.className="retirer";x.type="button";x.textContent="×";
+  x.setAttribute("aria-label","Retirer cette dépense");
+  x.addEventListener("click",()=>{d.remove();apercu()});
+  d.append(a,b,x);document.getElementById("depList").appendChild(d)}
+function lireDepenses(){return [...document.querySelectorAll(".dep-ligne")].map(d=>{const i=d.querySelectorAll("input");
+  return{libelle:i[0].value.trim()||"Dépense",montant:nombre(i[1].value)}}).filter(d=>d.montant>0)}
+function apercu(){const v=nombre(document.getElementById("fVers").value);
+  const dep=lireDepenses().reduce((s,d)=>s+d.montant,0);
+  document.getElementById("apercu").innerHTML="Bénéfice de ce versement : <b class='num'>"+fmt(v-dep)+" FCFA</b>"}
+function videForm(){document.getElementById("fVers").value="";document.getElementById("depList").innerHTML="";ligneDep();
+  document.getElementById("fDate").value=new Date().toISOString().slice(0,10);editId=null;
+  document.getElementById("titreForm").textContent="Nouveau versement";
+  document.getElementById("btnSave").textContent="Enregistrer le versement";
+  document.getElementById("btnCancel").hidden=true;apercu()}
+function modifier(id){const e=vehicule().entrees.find(x=>x.id===id);if(!e)return;editId=id;
+  document.getElementById("fDate").value=e.date;document.getElementById("fVers").value=e.versement;
+  document.getElementById("depList").innerHTML="";
+  if(e.depenses.length)e.depenses.forEach(d=>ligneDep(d.libelle,d.montant));else ligneDep();
+  document.getElementById("titreForm").textContent="Modifier le versement";
+  document.getElementById("btnSave").textContent="Mettre à jour";
+  document.getElementById("btnCancel").hidden=false;apercu();window.scrollTo({top:0,behavior:"smooth"})}
+function tout(){
+  const ong=document.getElementById("onglets");ong.innerHTML="";
+  data.vehicules.forEach(v=>{const b=document.createElement("button");b.textContent=v.nom;
+    b.setAttribute("aria-pressed",v.id===actif?"true":"false");
+    b.addEventListener("click",()=>{actif=v.id;confirmId=null;videForm();tout()});ong.appendChild(b)});
+  const veh=vehicule();
+  veh.entrees.sort((a,b)=>a.date.localeCompare(b.date));
+  const tv=veh.entrees.reduce((s,e)=>s+e.versement,0),td=veh.entrees.reduce((s,e)=>s+totalDep(e),0);
+  document.getElementById("benefVal").textContent=fmt(tv-td);
+  document.getElementById("totVers").textContent=fmt(tv);
+  document.getElementById("totDep").textContent=fmt(td);
+  const d0=veh.entrees.length?jour(veh.entrees[0].date):null;
+  document.getElementById("benefLib").textContent=d0
+    ?"bénéfice net du "+veh.nom+" depuis le "+libCourt(d0)+" "+d0.getFullYear()
+    :"aucun versement enregistré pour le "+veh.nom;
+  const p=tv>0?Math.min(100,td/tv*100):0;
+  document.getElementById("barDep").style.width=p+"%";
+  document.getElementById("barBen").style.width=(100-p)+"%";
+  let cv=0,cd=0;data.vehicules.forEach(v=>v.entrees.forEach(e=>{cv+=e.versement;cd+=totalDep(e)}));
+  document.getElementById("cumul").innerHTML="Les deux véhicules : <b class='num'>"+fmt(cv-cd)+
+    " FCFA</b> de bénéfice sur <b class='num'>"+fmt(cv)+"</b> versés";
+  cadence(veh,tv,td);
+  const mois={};
+  veh.entrees.forEach(e=>{const k=e.date.slice(0,7);mois[k]=mois[k]||{v:0,d:0};mois[k].v+=e.versement;mois[k].d+=totalDep(e)});
+  const tb=document.getElementById("moisBody");tb.innerHTML="";
+  const cles=Object.keys(mois).sort();
+  document.getElementById("cptMois").textContent=cles.length?cles.length+" mois":"";
+  if(!cles.length)tb.innerHTML="<tr><td colspan='4' style='color:var(--gris)'>Rien à afficher.</td></tr>";
+  cles.forEach(k=>{const m=mois[k],n=m.v-m.d;const tr=document.createElement("tr");
+    tr.innerHTML="<td>"+MOIS[parseInt(k.slice(5),10)-1]+" "+k.slice(2,4)+"</td><td class='num'>"+fmt(m.v)+
+      "</td><td class='num'>"+fmt(m.d)+"</td><td class='num "+(n<0?"neg":"pos")+"'>"+fmt(n)+"</td>";
+    tb.appendChild(tr)});
+  const postes={};
+  veh.entrees.forEach(e=>e.depenses.forEach(d=>{
+    const k=d.libelle.trim().toLowerCase();
+    postes[k]=postes[k]||{lib:d.libelle.trim(),n:0,t:0};
+    postes[k].n++;postes[k].t+=d.montant}));
+  const listeP=Object.values(postes).sort((a,b)=>b.t-a.t);
+  const pb=document.getElementById("postesBody");pb.innerHTML="";
+  document.getElementById("cptPostes").textContent=listeP.length?fmt(td)+" F":"";
+  if(!listeP.length)pb.innerHTML="<tr><td colspan='3' style='color:var(--gris)'>Aucune dépense enregistrée.</td></tr>";
+  listeP.forEach(q=>{const tr=document.createElement("tr");
+    tr.innerHTML="<td>"+echap(q.lib)+"</td><td class='num'>"+q.n+"</td><td class='num neg'>"+fmt(q.t)+"</td>";
+    pb.appendChild(tr)});
+  journal(veh);
+}
+function cadence(veh,tv,td){
+  const c=document.getElementById("cadence");
+  if(!veh.entrees.length){
+    c.innerHTML="<p class='vide'>Dès le premier versement enregistré, tu verras ici le rythme des paiements du "+echap(veh.nom)+".</p>";
+    return}
+  const debut=lundi(jour(veh.entrees[0].date)),fin=lundi(new Date()),semaines=[];
+  for(let d=new Date(debut);d<=fin;d.setDate(d.getDate()+7))semaines.push(cle(new Date(d)));
+  const payees={};
+  veh.entrees.forEach(e=>{const k=cle(lundi(jour(e.date)));payees[k]=(payees[k]||0)+1});
+  const couvertes=semaines.filter(s=>payees[s]).length,manquees=semaines.filter(s=>!payees[s]);
+  const nb=veh.entrees.length,moyVers=Math.round(tv/nb),moySem=Math.round((tv-td)/semaines.length);
+  const dernier=jour(veh.entrees[veh.entrees.length-1].date);
+  const joursDepuis=Math.round((new Date().setHours(12,0,0,0)-dernier.getTime())/86400000);
+  let barres="";
+  semaines.forEach(s=>{barres+="<i class='"+(payees[s]?"":"vide")+"'></i>"});
+  let html="<div class='compte'><span class='g num'>"+nb+" versements</span><span class='p'>sur "+
+    semaines.length+" semaines</span></div><div class='semaines'>"+barres+"</div>"+
+    "<p><b class='num'>"+couvertes+"</b> semaines payées sur <b class='num'>"+semaines.length+"</b>, soit "+
+    Math.round(couvertes/semaines.length*100)+" % du temps</p>"+
+    "<p>Moyenne <b class='num'>"+fmt(moyVers)+" F</b> par versement et <b class='num'>"+fmt(moySem)+
+    " F</b> de bénéfice par semaine</p>"+
+    "<p>Dernier versement il y a <b class='num'>"+joursDepuis+"</b> jours, le "+libCourt(dernier)+"</p>";
+  if(manquees.length){
+    const recentes=manquees.slice(-4).map(s=>"semaine du "+libCourt(jour(s))).join(", ");
+    html+="<p class='manquees'>"+manquees.length+" semaine"+(manquees.length>1?"s":"")+" sans versement"+
+      (manquees.length>4?" (dernières : ":" : ")+recentes+(manquees.length>4?")":"")+"</p>"}
+  c.innerHTML=html;
+}
+function journal(veh){
+  const j=document.getElementById("journal");j.innerHTML="";
+  document.getElementById("cptJournal").textContent=veh.entrees.length?veh.entrees.length+" saisies":"";
+  if(!veh.entrees.length){
+    j.innerHTML="<p class='vide'>Aucun versement pour le "+echap(veh.nom)+". Saisis le premier au-dessus.</p>";return}
+  [...veh.entrees].reverse().forEach(e=>{
+    const d=jour(e.date),n=net(e);
+    const el=document.createElement("div");el.className="entree";
+    let r="<div class='rang entrant'><span class='lib'>Versement</span><span class='mt num'>+"+fmt(e.versement)+"</span></div>";
+    e.depenses.forEach(x=>{r+="<div class='rang sortant'><span class='lib'>"+echap(x.libelle)+
+      "</span><span class='mt num'>−"+fmt(x.montant)+"</span></div>"});
+    el.innerHTML="<div class='date-bloc'><span class='j num'>"+d.getDate()+"</span><span class='m'>"+MOIS[d.getMonth()]+
+      "</span></div><div class='corps'>"+r+"<div class='net"+(n<0?" negatif":"")+
+      "'><span>Bénéfice</span><span class='num'>"+fmt(n)+" FCFA</span></div><div class='actions'></div></div>";
+    const act=el.querySelector(".actions");
+    const bm=document.createElement("button");bm.textContent="Modifier";
+    bm.addEventListener("click",()=>modifier(e.id));
+    const bs=document.createElement("button");bs.className="danger";
+    bs.textContent=confirmId===e.id?"Confirmer la suppression":"Supprimer";
+    bs.addEventListener("click",()=>{const v2=vehicule();
+      if(confirmId===e.id){v2.entrees=v2.entrees.filter(x=>x.id!==e.id);confirmId=null;sauver();tout()}
+      else{confirmId=e.id;tout()}
+      document.getElementById("detJournal").open=true});
+    act.append(bm,bs);j.appendChild(el)})}
+document.getElementById("btnAddDep").addEventListener("click",()=>ligneDep());
+document.getElementById("fVers").addEventListener("input",apercu);
+document.getElementById("btnCancel").addEventListener("click",videForm);
+document.getElementById("btnSave").addEventListener("click",()=>{
+  const date=document.getElementById("fDate").value,v=nombre(document.getElementById("fVers").value),
+    note=document.getElementById("note");
+  if(!date){note.textContent="Choisis la date du versement.";return}
+  const dep=lireDepenses();
+  if(!v&&!dep.length){note.textContent="Saisis un montant de versement ou au moins une dépense.";return}
+  note.textContent="";const veh=vehicule();
+  if(editId){const e=veh.entrees.find(x=>x.id===editId);e.date=date;e.versement=v;e.depenses=dep}
+  else{veh.entrees.push({id:"e"+Date.now(),date:date,versement:v,depenses:dep})}
+  videForm();sauver();tout()});
+document.getElementById("btnCopier").addEventListener("click",()=>{
+  const t=JSON.stringify(data),n=document.getElementById("noteSauv");
+  document.getElementById("zoneRestore").value=t;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>{n.textContent="Sauvegarde copiée. Colle-la dans tes notes."})
+      .catch(()=>{n.textContent="Copie automatique refusée : sélectionne le texte ci-dessous et copie-le à la main."})}
+  else{n.textContent="Sélectionne le texte ci-dessous et copie-le à la main."}});
+document.getElementById("btnRestore").addEventListener("click",()=>{
+  const n=document.getElementById("noteSauv");
+  try{const o=JSON.parse(document.getElementById("zoneRestore").value);
+    if(!o||!Array.isArray(o.vehicules))throw 0;
+    data=o;actif=data.vehicules[0].id;sauver();videForm();tout();n.textContent="Données restaurées."}
+  catch(e){n.textContent="Ce texte n'est pas une sauvegarde valide."}});
+videForm();charger();
+</script>
+</body>
+</html>
